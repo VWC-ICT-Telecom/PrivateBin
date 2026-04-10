@@ -152,7 +152,7 @@ endif;
 		<nav class="navbar navbar-expand-lg bg-body-tertiary text-nowrap mb-3">
 			<div class="container-fluid">
 				<a class="reloadlink navbar-brand" href="">
-					<img alt="<?php echo I18n::_($NAME); ?>" src="img/icon.svg" height="38" />
+					<img alt="<?php echo I18n::_($NAME); ?>" src="img/vwc/vwc-groep-logo.png" height="38" />
 				</a>
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="<?php echo I18n::_('Toggle navigation'); ?>">
 					<span class="navbar-toggler-icon"></span>
@@ -378,7 +378,7 @@ if ($FILEUPLOAD) :
 <?php
 endif;
 ?>
-				<div id="status" role="alert" class="d-flex justify-content-between align-items-center alert alert-<?php echo $ISDELETED ? 'success' : 'info'; echo empty($STATUS) ? ' hidden' : '' ?>">
+				<div id="status" role="alert" class="d-flex justify-content-between align-items-center alert alert-<?php echo (bool)$ISDELETED ? 'success' : 'info'; echo empty($STATUS) ? ' hidden' : '' ?>">
 					<div>
 						<svg width="16" height="16" fill="currentColor" aria-hidden="true"><use href="img/bootstrap-icons.svg#info-circle" /></svg>
 						<?php echo I18n::encode($STATUS), PHP_EOL; ?>
@@ -513,7 +513,7 @@ endif;
 		</main>
 		<footer class="container-fluid mt-auto">
 			<div class="row">
-				<h5 class="col-md-5 col-xs-8"><?php echo I18n::_($NAME); ?> <small>- <?php echo I18n::_('Because ignorance is bliss'); ?></small></h5>
+				<h5 class="col-md-5 col-xs-8"><?php echo I18n::_($NAME); ?> <small> <?php echo I18n::_(''); ?></small></h5>
 				<p class="col-md-1 col-xs-4 text-center"><?php echo $VERSION; ?></p>
 				<p id="aboutbox" class="col-md-6 col-xs-12">
 					<?php echo sprintf(
