@@ -34,7 +34,7 @@ class TemplateSwitcher
      * @static
      * @var    array
      */
-    protected static $_availableTemplates = array();
+    protected static $_availableTemplates = [];
 
     /**
      * set available templates
@@ -73,7 +73,10 @@ class TemplateSwitcher
      */
     public static function getTemplate(): string
     {
-        if (array_key_exists('template', $_COOKIE)) {
+        if (
+            array_key_exists('template', $_COOKIE) &&
+            is_string($_COOKIE['template'])
+        ) {
             $template = basename($_COOKIE['template']);
             if (self::isTemplateAvailable($template)) {
                 return $template;

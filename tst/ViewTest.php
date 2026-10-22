@@ -12,25 +12,25 @@ class ViewTest extends TestCase
 
     private static $is_deleted = false;
 
-    private static $formatters = array(
+    private static $formatters = [
         'plaintext'          => 'Plain Text',
         'syntaxhighlighting' => 'Source Code',
         'markdown'           => 'Markdown',
-    );
+    ];
 
     private static $formatter_default = 'plaintext';
 
-    private static $expire = array(
+    private static $expire = [
         '5min'  => '5 minutes',
         '1hour' => '1 hour',
         'never' => 'Never',
-    );
+    ];
 
     private static $expire_default = '1hour';
 
     private static $version = 'Version 1.2.3';
 
-    private $_content = array();
+    private $_content = [];
 
     public function setUp(): void
     {
@@ -65,7 +65,7 @@ class ViewTest extends TestCase
         $page->assign('HTTPSLINK', 'https://example.com/');
         $page->assign('COMPRESSION', 'zlib');
         $page->assign('CSPHEADER', 'default-src \'none\'');
-        $page->assign('SRI', array());
+        $page->assign('SRI', []);
 
         foreach (new DirectoryIterator(PATH . 'tpl') as $file) {
             if ($file->getExtension() === 'php') {
@@ -75,25 +75,6 @@ class ViewTest extends TestCase
                 $this->_content[$template] = ob_get_contents();
                 ob_end_clean();
             }
-        }
-        // check bootstrap variants
-        $template = 'bootstrap-page';
-        ob_start();
-        $page->draw($template);
-        $this->_content[$template] = ob_get_contents();
-        ob_end_clean();
-        foreach (array('-dark', '-compact') as $suffix) {
-            $template = 'bootstrap' . $suffix;
-            ob_start();
-            $page->draw($template);
-            $this->_content[$template] = ob_get_contents();
-            ob_end_clean();
-
-            $template .= '-page';
-            ob_start();
-            $page->draw($template);
-            $this->_content[$template] = ob_get_contents();
-            ob_end_clean();
         }
     }
 
@@ -131,6 +112,17 @@ class ViewTest extends TestCase
                 $template . ': outputs version correctly'
             );
         }
+    }
+
+    public function testBootstrap5RetryButtonStartsHiddenInItsListItem()
+    {
+        $this->assertArrayHasKey('bootstrap5', $this->_content);
+        $this->assertMatchesRegularExpression(
+            '#<li class="nav-item d-flex flex-lg-row flex-column hidden">\s*'
+            . '<button id="retrybutton" type="button" class="reloadlink hidden\b#',
+            $this->_content['bootstrap5'],
+            'bootstrap5: retry button stays inside an initially hidden list item'
+        );
     }
 
     public function testMissingTemplate()

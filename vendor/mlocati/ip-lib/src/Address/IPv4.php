@@ -11,6 +11,8 @@ use IPLib\Service\NumberInChunks;
 
 /**
  * An IPv4 address.
+ *
+ * @phpstan-consistent-constructor
  */
 class IPv4 implements AddressInterface
 {
@@ -40,14 +42,14 @@ class IPv4 implements AddressInterface
     /**
      * A string representation of this address than can be used when comparing addresses and ranges.
      *
-     * @var string
+     * @var string|null
      */
     protected $comparableString;
 
     /**
      * An array containing RFC designated address ranges.
      *
-     * @var array|null
+     * @var \IPLib\Address\AssignedRange[]|null
      */
     private static $reservedRanges;
 
@@ -124,7 +126,7 @@ class IPv4 implements AddressInterface
         $flags = (int) $flags;
         $matches = null;
         if ($flags & ParseStringFlag::ADDRESS_MAYBE_RDNS) {
-            if (preg_match('/^([12]?[0-9]{1,2}\.[12]?[0-9]{1,2}\.[12]?[0-9]{1,2}\.[12]?[0-9]{1,2})\.in-addr\.arpa\.?$/i', $address, $matches)) {
+            if (preg_match('/^([12]?[0-9]{1,2}\.[12]?[0-9]{1,2}\.[12]?[0-9]{1,2}\.[12]?[0-9]{1,2})\.in-addr\.arpa\.?$/Di', $address, $matches)) {
                 $address = implode('.', array_reverse(explode('.', $matches[1])));
                 $flags = $flags & ~(ParseStringFlag::IPV4_MAYBE_NON_DECIMAL | ParseStringFlag::IPV4ADDRESS_MAYBE_NON_QUAD_DOTTED);
             }
@@ -160,7 +162,7 @@ class IPv4 implements AddressInterface
         if ($flags & ParseStringFlag::MAY_INCLUDE_PORT) {
             $rx .= '(?::\d+)?';
         }
-        if (!preg_match('/^' . $rx . '$/', $address, $matches)) {
+        if (!preg_match('/^' . $rx . '$/D', $address, $matches)) {
             return null;
         }
         $math = new \IPLib\Service\UnsignedIntegerMath();
@@ -181,7 +183,7 @@ class IPv4 implements AddressInterface
     /**
      * Parse an array of bytes and returns an IPv4 instance if the array is valid, or null otherwise.
      *
-     * @param int[]|array $bytes
+     * @param array<int|mixed> $bytes
      *
      * @return static|null
      */
@@ -367,10 +369,14 @@ class IPv4 implements AddressInterface
                 $exceptions = array();
                 if (isset($data[1])) {
                     foreach ($data[1] as $exceptionRange => $exceptionType) {
-                        $exceptions[] = new AssignedRange(Subnet::parseString($exceptionRange), $exceptionType);
+                        $subnet = Subnet::parseString($exceptionRange);
+                        /** @var Subnet $subnet */
+                        $exceptions[] = new AssignedRange($subnet, $exceptionType);
                     }
                 }
-                $reservedRanges[] = new AssignedRange(Subnet::parseString($range), $data[0], $exceptions);
+                $subnet = Subnet::parseString($range);
+                /** @var Subnet $subnet */
+                $reservedRanges[] = new AssignedRange($subnet, $data[0], $exceptions);
             }
             self::$reservedRanges = $reservedRanges;
         }
@@ -407,8 +413,10 @@ class IPv4 implements AddressInterface
     public function toIPv6()
     {
         $myBytes = $this->getBytes();
+        $ipv6 = IPv6::parseString('2002:' . sprintf('%02x', $myBytes[0]) . sprintf('%02x', $myBytes[1]) . ':' . sprintf('%02x', $myBytes[2]) . sprintf('%02x', $myBytes[3]) . '::');
+        /** @var IPv6 $ipv6 */
 
-        return IPv6::parseString('2002:' . sprintf('%02x', $myBytes[0]) . sprintf('%02x', $myBytes[1]) . ':' . sprintf('%02x', $myBytes[2]) . sprintf('%02x', $myBytes[3]) . '::');
+        return $ipv6;
     }
 
     /**
@@ -420,7 +428,10 @@ class IPv4 implements AddressInterface
      */
     public function toIPv6IPv4Mapped()
     {
-        return IPv6::fromBytes(array_merge(array(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff), $this->getBytes()));
+        $ipv6 = IPv6::fromBytes(array_merge(array(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff), $this->getBytes()));
+        /** @var IPv6 $ipv6 */
+
+        return $ipv6;
     }
 
     /**
@@ -524,7 +535,7 @@ class IPv4 implements AddressInterface
         }
         $absBits = abs($bits);
         if ($absBits >= 32) {
-            return new self('0.0.0.0');
+            return new static('0.0.0.0');
         }
         $pad = str_repeat('0', $absBits);
         $paddedBits = $this->getBits();

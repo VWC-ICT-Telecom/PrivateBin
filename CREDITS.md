@@ -37,8 +37,9 @@
 * Aaron Sherber - cache control headers for API calls & use of `shortenviayourls` in query parameters
 
 ## Translations
+
 * Hexalyse - French
-* Kuba Niewiarowski - Polish
+* Kuba Niewiarowski, Mariusz Krzaczkowski - Polish
 * Gabbalo - German
 * Draky50110 - French
 * Filip Muki Dobranić - Slovene
@@ -71,3 +72,4 @@
 * Edward205 - Romanian
 * babiloof - Swedish
 * Ali Fani - Persian
+* Peter Dave Hello - Chinese (Traditional)

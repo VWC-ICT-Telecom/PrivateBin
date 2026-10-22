@@ -9,6 +9,9 @@ namespace IPLib\Service;
  */
 class BinaryMath
 {
+    /**
+     * @var \IPLib\Service\BinaryMath|null
+     */
     private static $instance;
 
     /**
@@ -43,7 +46,7 @@ class BinaryMath
      * @param string $a
      * @param string $b
      *
-     * @return int 1 if $a is greater than $b, -1 if $b is greater than $b, 0 if they are the same
+     * @return int 1 if $a is greater than $b, -1 if $b is greater than $a, 0 if they are the same
      */
     public function compare($a, $b)
     {
@@ -119,7 +122,7 @@ class BinaryMath
      *
      * @param int $exponent The non-negative exponent
      *
-     * @return int|string
+     * @return int|numeric-string
      */
     public function pow2string($exponent)
     {
@@ -138,14 +141,16 @@ class BinaryMath
                 $digits[] = $carry;
             }
         }
+        $result = implode('', array_reverse($digits));
+        /** @var numeric-string $result */
 
-        return implode('', array_reverse($digits));
+        return $result;
     }
 
     /**
      * @param numeric-string|mixed $value
      *
-     * @return string empty string if $value is not a valid numeric string
+     * @return numeric-string|'' empty string if $value is not a valid numeric string
      */
     public function normalizeIntegerString($value)
     {
@@ -157,17 +162,22 @@ class BinaryMath
             $value = substr($value, 1);
         }
         $matches = null;
-        if (!preg_match('/^0*([0-9]+)$/', $value, $matches)) {
+        if (!preg_match('/^0*([0-9]+)$/D', $value, $matches)) {
             return '';
         }
+        $numericString = $matches[1];
+        if ($sign === '-' && $numericString !== '0') {
+            $numericString = '-' . $numericString;
+        }
+        /** @var numeric-string $numericString */
 
-        return ($sign === '-' && $matches[1] !== '0' ? $sign : '') . $matches[1];
+        return $numericString;
     }
 
     /**
      * @param numeric-string $value a string that has been normalized with normalizeIntegerString()
      *
-     * @return string
+     * @return numeric-string
      */
     public function add1ToIntegerString($value)
     {
@@ -189,8 +199,10 @@ class BinaryMath
             if ($imploded[0] === '0') {
                 $imploded = substr($imploded, 1);
             }
+            $result = '-' . $imploded;
+            /** @var numeric-string $result */
 
-            return '-' . $imploded;
+            return $result; // @phpstan-ignore varTag.nativeType
         }
         $digits = str_split($value);
         $carry = 1;
@@ -205,8 +217,10 @@ class BinaryMath
                 array_unshift($digits, (string) $carry);
             }
         }
+        $result = implode('', $digits);
+        /** @var numeric-string $result */
 
-        return implode('', $digits);
+        return $result;
     }
 
     /**
@@ -215,7 +229,7 @@ class BinaryMath
      * @param string $num1
      * @param string $num2
      *
-     * @return string[],int[] The first array element is $num1 (padded), the first array element is $num2 (padded), the third array element is the number of bits
+     * @return array{string, string, int} The first array element is $num1 (padded), the second array element is $num2 (padded), the third array element is the number of bits
      */
     private function toSameLength($num1, $num2)
     {
