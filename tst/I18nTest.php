@@ -44,7 +44,7 @@ class I18nTest extends TestCase
     public function testTranslationFallback()
     {
         $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'foobar';
-        $messageId                       = 'It does not matter if the message ID exists';
+        $messageId = 'It does not matter if the message ID exists';
         I18n::loadTranslations();
         $this->assertEquals($messageId, I18n::_($messageId), 'fallback to en');
         I18n::getLanguageLabels();
@@ -78,6 +78,44 @@ class I18nTest extends TestCase
         $this->assertEquals('0 heure',  I18n::_('%d hours', 0), '0 hours in French');
         $this->assertEquals('1 heure',  I18n::_('%d hours', 1), '1 hour in French');
         $this->assertEquals('2 heures', I18n::_('%d hours', 2), '2 hours in French');
+    }
+
+    /**
+     * @dataProvider provideEqualQualityHeaders
+     */
+    public function testEqualQualityPreservesBrowserOrder($acceptedLanguage, $language)
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $acceptedLanguage;
+        I18n::loadTranslations();
+        $this->assertEquals($language, I18n::getLanguage(), 'browser language ' . $acceptedLanguage);
+    }
+
+    public function provideEqualQualityHeaders()
+    {
+        // ICU before version 67 sorts languages of equal quality alphabetically
+        return [
+            'fr;q=0.8,de;q=0.8' => ['fr;q=0.8,de;q=0.8', 'fr'],
+            'fr,de'             => ['fr,de', 'fr'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideLanguagesUnknownToIcuHeaders
+     */
+    public function testBrowserLanguageUnknownToIcuDetection($acceptedLanguage, $language)
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $acceptedLanguage;
+        I18n::loadTranslations();
+        $this->assertEquals($language, I18n::getLanguage(), 'browser language ' . $acceptedLanguage);
+    }
+
+    public function provideLanguagesUnknownToIcuHeaders()
+    {
+        // ICU has no locale data for these languages, so it can only match the next one in the header
+        return [
+            'co,fr;q=0.8'  => ['co,fr;q=0.8', 'co'],
+            'jbo,de;q=0.8' => ['jbo,de;q=0.8', 'jbo'],
+        ];
     }
 
     public function testBulgarianMonthExpirationTranslation()
@@ -160,6 +198,26 @@ class I18nTest extends TestCase
         }
     }
 
+    /**
+     * @dataProvider provideTraditionalChineseWithZhFallbackHeaders
+     */
+    public function testBrowserLanguageZhHantWithZhFallbackDetection($acceptedLanguage, $language)
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $acceptedLanguage;
+        I18n::loadTranslations();
+        $this->assertEquals($language, I18n::getLanguage(), 'browser language ' . $acceptedLanguage);
+    }
+
+    public function provideTraditionalChineseWithZhFallbackHeaders()
+    {
+        // typical Chrome headers from Taiwan and Hong Kong, ICU before version 67
+        // has zh_TW and zh_HK only as aliases, skips them and returns zh instead
+        return [
+            'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7' => ['zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7', 'zh-tw'],
+            'zh-HK,zh;q=0.9,en;q=0.8'             => ['zh-HK,zh;q=0.9,en;q=0.8', 'zh-tw'],
+        ];
+    }
+
     public function testBrowserLanguagePlDetection()
     {
         $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'pl;q=0.8,en-GB;q=0.6,en-US;q=0.4,en;q=0.2';
@@ -212,6 +270,12 @@ class I18nTest extends TestCase
         $this->assertEquals('14 minut',  I18n::_('%d minutes', 14), '14 minutes in Czech');
     }
 
+    public function testInvalidBrowserLanguageQualityIsIgnored()
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'de;q=2,en;q=0.8';
+        $this->assertSame(['0.8' => ['en']], I18n::getBrowserLanguages());
+    }
+
     public function testBrowserLanguageAnyDetection()
     {
         $_SERVER['HTTP_ACCEPT_LANGUAGE'] = '*';
@@ -230,7 +294,7 @@ class I18nTest extends TestCase
     {
         $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'foobar';
         I18n::loadTranslations();
-        $input  = '&<>"\'/`=';
+        $input = '&<>"\'/`=';
         $result = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5 | ENT_DISALLOWED, 'UTF-8', false);
         $this->assertEquals($result, I18n::encode($input), 'encodes HTML entities');
         $this->assertEquals('<a>some ' . $result . ' + 1</a>', I18n::_('<a>some %s + %d</a>', $input, 1), 'encodes parameters in translations');
@@ -313,7 +377,7 @@ class I18nTest extends TestCase
     public function testMessageIdsExistInAllLanguages()
     {
         $messageIds = [];
-        $languages  = [];
+        $languages = [];
         foreach (new DirectoryIterator(PATH . 'i18n') as $file) {
             $fileNameLength = strlen($file->getFilename());
             if ($fileNameLength === 7) {       // xx.json
@@ -325,9 +389,9 @@ class I18nTest extends TestCase
             } else {
                 continue;
             }
-            $languageJson         = file_get_contents($file->getPathname());
-            $languageMessageIds   = array_keys(Json::decode($languageJson));
-            $messageIds           = array_unique(array_merge($messageIds, $languageMessageIds));
+            $languageJson = file_get_contents($file->getPathname());
+            $languageMessageIds = array_keys(Json::decode($languageJson));
+            $messageIds = array_unique(array_merge($messageIds, $languageMessageIds));
             $languages[$language] = $languageMessageIds;
         }
         foreach ($messageIds as $messageId) {

@@ -3,6 +3,20 @@ const common = require('../common');
 const fc = require('fast-check');
 
 describe('Helper', function () {
+    describe('PasteFactory', function () {
+        it('copies a __proto__ field without changing the paste prototype', function () {
+            const paste = PrivateBin.Helper.PasteFactory(
+                JSON.parse('{"__proto__":{"polluted":true},"ct":"cipher"}')
+            );
+            const regularPaste = PrivateBin.Helper.PasteFactory({ct: 'cipher'});
+
+            assert.strictEqual(Object.getPrototypeOf(paste), Object.getPrototypeOf(regularPaste));
+            assert.strictEqual(Object.prototype.polluted, undefined);
+            assert.ok(Object.prototype.hasOwnProperty.call(paste, '__proto__'));
+            assert.strictEqual(paste.ct, 'cipher');
+        });
+    });
+
     describe('secondsToHuman', function () {
         it('returns an array with a number and a word', () => {
             fc.assert(fc.property(fc.integer(), function (number) {
@@ -79,6 +93,8 @@ describe('Helper', function () {
                         result = true,
                         clean = globalThis.cleanup(html);
                     ids.forEach(function(item, i) {
+                        // i is bounded by the generated ids array; contents[0] is the fallback.
+                        // eslint-disable-next-line security/detect-object-injection
                         html += '<div id="' + item.join('') + '">' + PrivateBin.Helper.htmlEntities(contents[i] || contents[0]) + '</div>';
                     });
                     // TODO: As per https://github.com/tmpvar/jsdom/issues/321 there is no getSelection in jsdom, yet.
@@ -200,9 +216,9 @@ describe('Helper', function () {
                 fc.array(fc.string(), {minLength: 1}),
                 fc.string(),
                 function (prefix, params, postfix) {
-                    prefix    =    prefix.replace(/%(s|d)/g, '%%');
-                    params[0] = params[0].replace(/%(s|d)/g, '%%');
-                    postfix   =   postfix.replace(/%(s|d)/g, '%%');
+                    prefix    =    common.removePlaceholders(prefix);
+                    params[0] = common.removePlaceholders(params[0]);
+                    postfix   =   common.removePlaceholders(postfix);
                     var result = prefix + params[0] + postfix;
                     params.unshift(prefix + '%s' + postfix);
                     return result === PrivateBin.Helper.sprintf.apply(this, params);
@@ -215,8 +231,8 @@ describe('Helper', function () {
                 fc.array(fc.nat(), {minLength: 1}),
                 fc.string(),
                 function (prefix, params, postfix) {
-                    prefix  =  prefix.replace(/%(s|d)/g, '%%');
-                    postfix = postfix.replace(/%(s|d)/g, '%%');
+                    prefix  =  common.removePlaceholders(prefix);
+                    postfix = common.removePlaceholders(postfix);
                     var result = prefix + params[0] + postfix;
                     params.unshift(prefix + '%d' + postfix);
                     return result === PrivateBin.Helper.sprintf.apply(this, params);
@@ -229,8 +245,8 @@ describe('Helper', function () {
                 fc.array(fc.falsy(), {minLength: 1}),
                 fc.string(),
                 function (prefix, params, postfix) {
-                    prefix  =  prefix.replace(/%(s|d)/g, '%%');
-                    postfix = postfix.replace(/%(s|d)/g, '%%');
+                    prefix  =  common.removePlaceholders(prefix);
+                    postfix = common.removePlaceholders(postfix);
                     var result = prefix + '0' + postfix;
                     params.unshift(prefix + '%d' + postfix);
                     return result === PrivateBin.Helper.sprintf.apply(this, params);
@@ -245,9 +261,9 @@ describe('Helper', function () {
                 fc.string(),
                 fc.string(),
                 function (prefix, uint, middle, string, postfix) {
-                    prefix  =  prefix.replace(/%(s|d)/g, '');
-                    middle  =  middle.replace(/%(s|d)/g, '');
-                    postfix = postfix.replace(/%(s|d)/g, '');
+                    prefix  =  common.removePlaceholders(prefix);
+                    middle  =  common.removePlaceholders(middle);
+                    postfix = common.removePlaceholders(postfix);
                     var params = [prefix + '%d' + middle + '%s' + postfix, uint, string],
                         result = prefix + uint + middle + string + postfix;
                     return result === PrivateBin.Helper.sprintf.apply(this, params);
@@ -262,9 +278,9 @@ describe('Helper', function () {
                 fc.string(),
                 fc.string(),
                 function (prefix, uint, middle, string, postfix) {
-                    prefix  =  prefix.replace(/%(s|d)/g, '');
-                    middle  =  middle.replace(/%(s|d)/g, '');
-                    postfix = postfix.replace(/%(s|d)/g, '');
+                    prefix  =  common.removePlaceholders(prefix);
+                    middle  =  common.removePlaceholders(middle);
+                    postfix = common.removePlaceholders(postfix);
                     var params = [prefix + '%s' + middle + '%d' + postfix, string, uint],
                         result = prefix + string + middle + uint + postfix;
                     return result === PrivateBin.Helper.sprintf.apply(this, params);

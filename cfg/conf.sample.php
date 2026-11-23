@@ -23,6 +23,11 @@ opendiscussion = false
 ; the comments by creation time, but you can choose not to display them.
 ; discussiondatedisplay = false
 
+; require new comments to match the IDs of their document and parent
+; comment, defaults to false. Comments sent by clients that don't, are rejected.
+; This prevents copies of comments from getting moved elsewhere in the discussion.
+; discussionrequireauthenticatedids = true
+
 ; enable or disable the password feature, defaults to true
 password = true
 
@@ -40,7 +45,7 @@ defaultformatter = "plaintext"
 ; syntaxhighlightingtheme = "sons-of-obsidian"
 
 ; size limit per document or comment in bytes, defaults to 10 Megabytes
-sizelimit = 10000000
+sizelimit = 10485760
 
 ; by default PrivateBin use "bootstrap5" template (tpl/bootstrap5.php).
 ; Optionally you can enable the template selection menu, which uses
@@ -49,6 +54,8 @@ templateselection = false
 
 ; List of available for selection templates when "templateselection" option is enabled
 availabletemplates[] = "bootstrap5"
+availabletemplates[] = "splitview"
+availabletemplates[] = "modern"
 
 ; set the template your installs defaults to, defaults to "bootstrap5" (tpl/bootstrap5.php)
 ; previews at:
@@ -130,6 +137,19 @@ languageselection = false
 ; created after changing the setting.
 ; Can be set to one these values: "none" / "zlib" (default).
 ; compression = "zlib"
+
+; (optional) settings for the selected template, each template decides which
+; ones it reads and ignores the rest. The "modern" template supports:
+; [template_options]
+; logo image, as a path on this server, defaults to "img/icon.svg"
+; logo = "img/custom/logo.svg"
+; alternative logo for dark mode, defaults to using the one above
+; logo_dark = "img/custom/logo-dark.svg"
+; accent colour: "amber" (default) / "blue" / "green" / "rose"
+; accent = "amber"
+; additional stylesheet to customize the template, as a path on this server,
+; loaded after the ones of the template, e.g. to override its CSS variables
+; stylesheet = "css/custom/brand.css"
 
 [expire]
 ; expire value that is selected per default
